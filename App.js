@@ -5,7 +5,8 @@ import {
 	View,
 	Button,
 	TextInput,
-	Alert
+	Alert,
+	ActivityIndicator
 } from 'react-native';
 import { StackNavigator } from 'react-navigation';
 import styles from './styles';
@@ -20,6 +21,15 @@ let resultsCache = {
 
 class HomeScreen extends Component {
 
+	constructor(props) {
+		super(props);
+		this.state = {
+			isLoading: false,
+			query: '',			
+			resultsData: []
+		};
+	}
+
 	static navigationOptions = ({ navigation }) => ({
 		title: 'Movie Browser List',
 		headerRight: <HeaderRight navigation={ navigation } />
@@ -31,36 +41,59 @@ class HomeScreen extends Component {
 		timeoutID: (null: any);
 
 		function _urlForQuery(query) {
-			if (query) {
+			if (query.length > 2) {
 				return API_URL + '?media=movie&term=' + encodeURIComponent(query);
-			} else {
-				return API_URL + '?media=movie&term=mission+impossible';
 			}
 		}
 
 		function searchMedia(query) {
 
 			this.timeoutID = null;
+			this.setState({ query: query });
+
 			let cachedResultsForQuery = resultsCache.dataForQuery[query];
 			if (cachedResultsForQuery) {
 				if (!LOADING[query]) {
-					Alert.alert('Number of Results', cachedResultsForQuery.length + ' cached results');
+					this.setState({
+						isLoading: false,
+						resultsData: cachedResultsForQuery
+					});
+				} else {
+					this.setState({
+						isLoading: true
+					});
 				}
 			} else {
+
+				let queryURL = _urlForQuery(query);
+
+				if (!queryURL) return false;
+
+				this.setState({
+					isLoading: true
+				});
+
 				LOADING[query] = true;
 				resultsCache.dataForQuery[query] = null;
 
-				fetch(_urlForQuery(query))
+				fetch(queryURL)
 					.then((response) => response.json())
 					.catch((error) => {
 						LOADING[query] = false;
 						resultsCache.dataForQuery[query] = undefined;
+
+						this.setState({
+							isLoading: false
+						});
 					})
 					.then((responseData) => {
 						LOADING[query] = false;
 						resultsCache.dataForQuery[query] = responseData.results;
 
-						Alert.alert('Number of Results', responseData.resultCount + ' results');
+						this.setState({
+							isLoading: false,
+							resultsData: resultsCache.dataForQuery[query]
+						});
 					});
 			}
 		}
@@ -68,13 +101,14 @@ class HomeScreen extends Component {
 		return (
 		  <View style={styles.global.mainContainer}>
 		    <SearchInput
+		    	isLoading={this.state.isLoading}
 		    	onSearch={(event) => {
 		    		let searchString = event.nativeEvent.text;
-		    		searchMedia(searchString);
+		    		setTimeout(function(){ searchMedia(searchString) }, 250);
 		    	}}
 		    />
 		    <Text>
-		    Meggings hohoho single-origin coffjhk jkjh kjh ee crucifix meh chicharrones plaid lumbersexual. Pop-up pinterest sriracha chicharrones tumblr pickled ramps meggings. DIY austin lomo post-ironic. Vinyl kogi godard, messenger bag tattooed post-ironic cronut. Kickstarter knausgaard beard raclette fanny pack. Yr authentic master cleanse banjo lo-fi etsy, health goth tote bag art party copper mug tattooed vinyl fingerstache keytar. 
+		    Meggingasdasds hohoho single-origin coffjhk jkjh kjh ee crucifix meh chicharrones plaid lumbersexual. Pop-up pinterest sriracha chicharrones tumblr pickled ramps meggings. DIY austin lomo post-ironic. Vinyl kogi godard, messenger bag tattooed post-ironic cronut. Kickstarter knausgaard beard raclette fanny pack. Yr authentic master cleanse banjo lo-fi etsy, health goth tote bag art party copper mug tattooed vinyl fingerstache keytar. 
 		    </Text>
 		  </View>			
 		);
@@ -107,7 +141,11 @@ class SearchInput extends Component {
 					returnKeyType="search"
 					enablesReturnKeyAutomatically={true}
 					style={styles.global.searchBarInput}
-					onEndEditing={this.props.onSearch}
+					onChange={this.props.onSearch.bind(this)}
+				/>
+				<ActivityIndicator
+					animating={this.props.isLoading}
+					style={styles.global.spinner}
 				/>
 			</View>
 		);
