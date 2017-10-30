@@ -8,9 +8,56 @@ import {
 	Alert
 } from 'react-native';
 import { StackNavigator } from 'react-navigation';
+import TimerMixin from 'react-timer-mixin';
 import styles from './styles';
 
+let API_URL = 'https://itunes.apple.com/search';
+
+let LOADING = {};
+
+let resultsCache = {
+	dataForQuery: {}
+};
+
 class HomeScreen extends Component {
+	mixins: [TimerMixin],
+
+	timeoutID: (null: any);
+
+	_urlForQuery: function (query: string): string {
+		if (query) {
+			return API_URL + '?media=movie&term=' + encodeURIComponent(query);
+		} else {
+			return API_URL + '?media=movie&term=mission+impossible';
+		}
+	};
+
+	searchMedia: (query: string) => {
+		this.timeoutID = null;
+		
+		let cachedResultsForQuery = resultsCache.dataForQuery[query];
+		if (cachedResultsForQuery) {
+			if (!LOADING[query]) {
+				Alert.alert('Number of Results', cachedResultsForQuery.length + ' cached results');
+			}
+		} else {
+			LOADING[query] = true;
+			resultsCache.dataForQuery[query] = null;
+
+			fetch(this._urlForQuery(query))
+				.then((response) => response.json())
+				.catch((error) => {
+					LOADING[query] = false;
+					resultsCache.dataForQuery[query] = undefined;
+				})
+				.then((responseData) => {
+					LOADING[query] = false;
+					resultsCache.dataForQuery[query] = responseData.results;
+
+					Alert.alert('Number of Results', responseData.resultCount + ' results');
+				});
+		}
+	},
 	
 	static navigationOptions = ({ navigation }) => ({
 		title: 'Movie Browser List',
@@ -26,7 +73,9 @@ class HomeScreen extends Component {
 		    <SearchInput
 		    	onSearch={(event) => {
 		    		let searchString = event.nativeEvent.text;
-		    		Alert.alert('Hasil pencarian...', searchString);
+		    		
+		    		this.clearTimeout(this.timeoutID);
+		    		this.timeoutID = this.setTimeout(() => this.searchMedia(searchString));
 		    	}}
 		    />
 		    <Text>
