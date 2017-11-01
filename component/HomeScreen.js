@@ -7,8 +7,8 @@ import {
 	TextInput,
 	Alert,
 	ActivityIndicator,
-	ListView
-} from 'react-native';
+	ListView }
+from 'react-native';
 import { StackNavigator } from 'react-navigation';
 import styles from '../styles';
 
@@ -19,21 +19,17 @@ let resultsCache = {
 };
 
 class HomeScreen extends Component {
-
 	constructor(props) {
 		super(props);
-		const ds = new ListView.DataSource({
-			rowHasChanged: (r1, r2) => r1 !== r2
-		});
 		this.state = {
-			isLoading: false,
-			query: '',			
-			resultsData: []
-		};
+		 	isLoading: true,
+		 	query: '',
+		 	resultsData: []
+		}
 	}
 
 	componentDidMount() {
-		this.searchMedia('mini');
+		this.searchMedia('mission impossible');
 	}
 
 	getDataSource(mediaItems: string) {
@@ -64,6 +60,7 @@ class HomeScreen extends Component {
 		let cachedResultsForQuery = resultsCache.dataForQuery[searchString];
 
 		if (cachedResultsForQuery) {
+			console.log(LOADING);
 			if (!LOADING[searchString]) {
 				this.setState({
 					isLoading: false,
@@ -107,19 +104,27 @@ class HomeScreen extends Component {
 					});
 				});
 		}
-
-		console.log(this.state);
-
-	}
-
-	handleChange(event) {
-		let searchString = event.nativeEvent.text;		
-		this.searchMedia(searchString);
 	}
 	
+
+	handleChange(event) {
+		let root = this;
+		let searchString = event.nativeEvent.text;
+		setTimeout(function() {
+			root.searchMedia(searchString);
+		}, 250);
+	}				
+
 	render() {
-		const { navigate } = this.props.navigation;
-		timeoutID: (null: any);
+
+		if (this.state.isLoading) {
+		  return (
+		    <View style={{flex: 1, paddingTop: 20}}>
+		      <ActivityIndicator />
+		    </View>
+		  );
+		}
+
 		return (
 		  <View style={styles.global.mainContainer}>
 			<View isLoading={this.state.isLoading} style={styles.global.searchBar}>
@@ -133,14 +138,18 @@ class HomeScreen extends Component {
 					onChange={this.handleChange.bind(this)}
 				/>
 				<ActivityIndicator
-					animating={this.props.isLoading}
+					animating={this.state.isLoading}
 					style={styles.global.spinner}
 				/>
-			</View>	  
-
+			</View>
+			<View>
+		        <ListView
+		          dataSource={this.state.resultsData}
+		          renderRow={(rowData) => <Text>{rowData.trackName}, {rowData.primaryGenreName}</Text>}
+		        />	
+			</View> 
 		  </View>			
 		);
-	
 	}
 }
 
