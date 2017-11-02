@@ -10,6 +10,7 @@ import {
 	ListView }
 from 'react-native';
 import { StackNavigator } from 'react-navigation';
+import MediaCell from './MediaCell';
 import styles from '../styles';
 
 let API_URL = 'https://itunes.apple.com/search';
@@ -28,7 +29,7 @@ class HomeScreen extends Component {
 		}
 	}
 
-	componentDidMount() {
+	componentWillMount() {
 		this.searchMedia('mission impossible');
 	}
 
@@ -105,24 +106,84 @@ class HomeScreen extends Component {
 				});
 		}
 	}
-	
 
+	renderSeparator(
+		sectionID: number | string, 
+		rowID: number | string, 
+		adjacentRowHighlighted: boolean) {
+
+		return (
+			<View
+				key={"SEP_" + sectionID + "_" + rowID}
+				style={[styles.global.rowSeparator, adjacentRowHighlighted && styles.global.rowSeparatorHighlighter]}
+			/>
+		);
+
+	}
+
+	renderRow(media: Object, sectionID: number | string, rowID: number | string, highlightRowFunction: (sectionID: ?number | string, rowID: ?number | string) => void) {
+		return (
+			<MediaCell
+				media={media}
+				onHighlight={() => highlightRowFunction(sectionID, rowID)}
+				onDehighlight={() => highlightRowFunction(null, null)}
+			/>
+		);
+	}
+	
 	handleChange(event) {
 		let root = this;
 		let searchString = event.nativeEvent.text;
 		setTimeout(function() {
 			root.searchMedia(searchString);
-		}, 250);
+		}, 1000);
 	}				
 
 	render() {
 
+		let showList = "";
+		let content = "";
+
 		if (this.state.isLoading) {
-		  return (
-		    <View style={{flex: 1, paddingTop: 20}}>
-		      <ActivityIndicator />
-		    </View>
-		  );
+
+			showList = (
+				<View style={{flex: 1, paddingTop: 20}}>
+					<ActivityIndicator />		      		
+		    	</View>
+		    );
+
+		} else {
+			
+			if(this.state.resultsData.getRowCount() === 0) {
+
+				let text = "";
+
+				if(!this.state.isLoading && this.state.query) {
+					text = "No movies found for '" + this.state.query + "'.";
+				} else if (!this.state.isLoading) {
+					text = "No movies found.";
+				}
+
+				content = <View style={styles.global.emptyList}>
+					<Text style={styles.global.emptyListText}>{ text }</Text>
+				</View>;
+
+				showList = content;
+
+			} else {
+
+				showList = (
+					<ListView
+			          dataSource={this.state.resultsData}
+			          renderRow={this.renderRow}
+			          renderSeparator={this.renderSeparator}
+			          automaticallyAdjustContentInsets={false}
+			          enableEmptySections
+			        />
+				);
+			
+			}
+
 		}
 
 		return (
@@ -137,16 +198,9 @@ class HomeScreen extends Component {
 					style={styles.global.searchBarInput}
 					onChange={this.handleChange.bind(this)}
 				/>
-				<ActivityIndicator
-					animating={this.state.isLoading}
-					style={styles.global.spinner}
-				/>
 			</View>
 			<View>
-		        <ListView
-		          dataSource={this.state.resultsData}
-		          renderRow={(rowData) => <Text>{rowData.trackName}, {rowData.primaryGenreName}</Text>}
-		        />	
+			{ showList }
 			</View> 
 		  </View>			
 		);
