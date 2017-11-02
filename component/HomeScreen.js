@@ -11,6 +11,7 @@ import {
 from 'react-native';
 import { StackNavigator } from 'react-navigation';
 import MediaCell from './MediaCell';
+import MediaDetailView from './MediaDetailView';
 import styles from '../styles';
 
 let API_URL = 'https://itunes.apple.com/search';
@@ -96,8 +97,11 @@ class HomeScreen extends Component {
 					});
 				})
 				.then((responseData) => {
+					return responseData.results.filter((e) => e.wrapperType !== 'collection');
+				})
+				.then((responseData) => {
 					LOADING[searchString] = false;
-					resultsCache.dataForQuery[searchString] = responseData.results;
+					resultsCache.dataForQuery[searchString] = responseData;
 
 					this.setState({
 						isLoading: false,
@@ -122,15 +126,28 @@ class HomeScreen extends Component {
 	}
 
 	renderRow(media: Object, sectionID: number | string, rowID: number | string, highlightRowFunction: (sectionID: ?number | string, rowID: ?number | string) => void) {
+		
 		return (
 			<MediaCell
 				media={media}
+				onSelect={() => this.selectMediaItem(media)}
 				onHighlight={() => highlightRowFunction(sectionID, rowID)}
 				onDehighlight={() => highlightRowFunction(null, null)}
 			/>
-		);
+		);		
+	
 	}
 	
+	selectMediaItem(mediaItem) {
+		this.props.navigation.navigate({
+			this: 'Media Details',
+			component: MediaDetailView,
+			passProps: {
+				mediaItem
+			}
+		});
+	}
+
 	handleChange(event) {
 		let root = this;
 		let searchString = event.nativeEvent.text;
@@ -175,7 +192,7 @@ class HomeScreen extends Component {
 				showList = (
 					<ListView
 			          dataSource={this.state.resultsData}
-			          renderRow={this.renderRow}
+			          renderRow={this.renderRow.bind(this)}
 			          renderSeparator={this.renderSeparator}
 			          automaticallyAdjustContentInsets={false}
 			          enableEmptySections

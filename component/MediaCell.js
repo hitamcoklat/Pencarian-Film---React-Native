@@ -48,6 +48,7 @@ class MediaCell extends Component {
 		return (
 			<View>
 				<TouchableHighlight
+					onPress={this.props.onSelect}
 					onShowUnderlay={this.props.onHighlight}
 					onHideUnderlay={this.props.onDeHighlight}
 					underlayColor={styles.pressColor}
