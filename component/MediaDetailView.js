@@ -9,6 +9,7 @@ import {
 
 class MediaDetailView extends Component {
 	render() {
+		console.log(this.props.navigation.state.params);
 		return (
 			<View></View>
 		);

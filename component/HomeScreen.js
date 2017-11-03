@@ -11,7 +11,6 @@ import {
 from 'react-native';
 import { StackNavigator } from 'react-navigation';
 import MediaCell from './MediaCell';
-import MediaDetailView from './MediaDetailView';
 import styles from '../styles';
 
 let API_URL = 'https://itunes.apple.com/search';
@@ -139,13 +138,14 @@ class HomeScreen extends Component {
 	}
 	
 	selectMediaItem(mediaItem) {
-		this.props.navigation.navigate({
-			this: 'Media Details',
-			component: MediaDetailView,
-			passProps: {
-				mediaItem
-			}
-		});
+		this.props.navigation.navigate('Details', mediaItem);
+		// this.props.navigation.navigate({
+		// 	this: 'Media Details',
+		// 	component: DetailsScreen,
+		// 	passProps: {
+		// 		mediaItem
+		// 	}
+		// });
 	}
 
 	handleChange(event) {
