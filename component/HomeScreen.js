@@ -41,8 +41,7 @@ class HomeScreen extends Component {
 	}
 
 	static navigationOptions = ({ navigation }) => ({
-		title: 'Movie Browser List',
-		headerRight:<Button onPress={() => this.props.navigation.navigate('Details')} title="Search" />
+		title: 'Movie Browser List'
 	});
 
 	_urlForQuery(query) {
@@ -139,13 +138,6 @@ class HomeScreen extends Component {
 	
 	selectMediaItem(mediaItem) {
 		this.props.navigation.navigate('Details', mediaItem);
-		// this.props.navigation.navigate({
-		// 	this: 'Media Details',
-		// 	component: DetailsScreen,
-		// 	passProps: {
-		// 		mediaItem
-		// 	}
-		// });
 	}
 
 	handleChange(event) {
@@ -194,7 +186,9 @@ class HomeScreen extends Component {
 			          dataSource={this.state.resultsData}
 			          renderRow={this.renderRow.bind(this)}
 			          renderSeparator={this.renderSeparator}
-			          automaticallyAdjustContentInsets={false}
+			          automaticallyAdjustContentInsets={true}
+			          contentInset={{bottom:49}}
+			          contentContainerStyle={{paddingBottom: 60}} 
 			          enableEmptySections
 			        />
 				);
